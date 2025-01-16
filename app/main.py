@@ -1,12 +1,15 @@
 # app/main.py
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 import os
 
-DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_HOST = os.environ.get("DB_HOST", "mysql")
 DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "my-secret-pw")
 DB_NAME = os.environ.get("DB_NAME", "mydatabase")
@@ -19,28 +22,31 @@ Base = declarative_base()
 
 app = FastAPI()
 
+# Povezivanje statičkih fajlova
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Povezivanje Jinja2 template-a
+templates = Jinja2Templates(directory="templates")
+
 
 class Item(Base):
     __tablename__ = 'items'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
 
+
 # Pydantic schema
-
-
 class ItemSchema(BaseModel):
     name: str
 
+
 # Kreiraj tablicu pri pokretanju (samo za demo)
-
-
 @app.on_event("startup")
 def startup_db():
     Base.metadata.create_all(bind=engine)
 
+
 # Dependency za dobivanje DB sesije
-
-
 def get_db():
     db = SessionLocal()
     try:
@@ -48,10 +54,17 @@ def get_db():
     finally:
         db.close()
 
+
+# Ruta za frontend
+@app.get("/", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+# API Endpoints
+
 # CREATE
-
-
-@app.post("/items", response_model=dict)
+@app.post("/api/items", response_model=dict)
 def create_item(item: ItemSchema, db=Depends(get_db)):
     db_item = Item(name=item.name)
     db.add(db_item)
@@ -60,21 +73,17 @@ def create_item(item: ItemSchema, db=Depends(get_db)):
     return {"id": db_item.id, "name": db_item.name}
 
 # READ (all)
-
-
-@app.get("/items", response_model=list[dict])
+@app.get("/api/items", response_model=list[dict])
 def read_items(db=Depends(get_db)):
     items = db.query(Item).all()
     return [{"id": i.id, "name": i.name} for i in items]
 
 # UPDATE
-
-
-@app.put("/items/{item_id}", response_model=dict)
+@app.put("/api/items/{item_id}", response_model=dict)
 def update_item(item_id: int, item: ItemSchema, db=Depends(get_db)):
     db_item = db.query(Item).filter(Item.id == item_id).first()
     if not db_item:
-        return {"error": "Item not found"}
+        raise HTTPException(status_code=404, detail="Item not found")
 
     db_item.name = item.name
     db.commit()
@@ -82,13 +91,11 @@ def update_item(item_id: int, item: ItemSchema, db=Depends(get_db)):
     return {"id": db_item.id, "name": db_item.name}
 
 # DELETE
-
-
-@app.delete("/items/{item_id}", response_model=dict)
+@app.delete("/api/items/{item_id}", response_model=dict)
 def delete_item(item_id: int, db=Depends(get_db)):
     db_item = db.query(Item).filter(Item.id == item_id).first()
     if not db_item:
-        return {"error": "Item not found"}
+        raise HTTPException(status_code=404, detail="Item not found")
 
     db.delete(db_item)
     db.commit()
