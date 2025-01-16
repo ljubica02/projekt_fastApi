@@ -1,6 +1,6 @@
-// Funkcija za učitavanje svih donacija
+
 async function loadDonations() {
-    const response = await fetch('/api/donations');
+    const response = await fetch('/api/donacije');
     const donations = await response.json();
     const donationsList = document.getElementById('donations-list');
     donationsList.innerHTML = '';
@@ -21,7 +21,6 @@ async function loadDonations() {
     document.getElementById('total-donations').innerText = total.toFixed(2);
 }
 
-// Funkcija za kreiranje nove donacije
 async function createDonation() {
     const amountInput = document.getElementById('create-amount');
     const amount = parseFloat(amountInput.value);
@@ -30,7 +29,7 @@ async function createDonation() {
         return;
     }
 
-    const response = await fetch('/api/donations', {
+    const response = await fetch('/api/donacije', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -46,10 +45,9 @@ async function createDonation() {
     }
 }
 
-// Funkcija za uređivanje postojeće donacije
 function editDonation(id, currentAmount) {
     const newAmount = prompt('Unesi novi iznos donacije:', currentAmount);
-    if (newAmount === null) return; // Korisnik je otkazao
+    if (newAmount === null) return; 
 
     const parsedAmount = parseFloat(newAmount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -60,9 +58,8 @@ function editDonation(id, currentAmount) {
     updateDonation(id, parsedAmount);
 }
 
-// Funkcija za ažuriranje donacije
 async function updateDonation(id, amount) {
-    const response = await fetch(`/api/donations/${id}`, {
+    const response = await fetch(`/api/donacije/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -77,11 +74,11 @@ async function updateDonation(id, amount) {
     }
 }
 
-// Funkcija za brisanje donacije
+
 async function deleteDonation(id) {
     if (!confirm('Jesi li siguran da želiš obrisati ovu donaciju?')) return;
 
-    const response = await fetch(`/api/donations/${id}`, {
+    const response = await fetch(`/api/donacije/${id}`, {
         method: 'DELETE'
     });
 
@@ -92,5 +89,4 @@ async function deleteDonation(id) {
     }
 }
 
-// Učitaj donacije kada se stranica učita
 window.onload = loadDonations;

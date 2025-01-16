@@ -1,4 +1,3 @@
-# app/main.py
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,31 +21,29 @@ Base = declarative_base()
 
 app = FastAPI()
 
-# Povezivanje statičkih fajlova
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Povezivanje Jinja2 template-a
 templates = Jinja2Templates(directory="templates")
 
 
 class Donation(Base):
-    __tablename__ = 'donations'
+    __tablename__ = 'donacije'
     id = Column(Integer, primary_key=True, index=True)
-    amount = Column(Numeric(10, 2), nullable=False)  # Numerička vrijednost donacije
+    amount = Column(Numeric(10, 2), nullable=False)  
 
 
-# Pydantic schema
+
 class DonationSchema(BaseModel):
-    amount: condecimal(gt=0, max_digits=10, decimal_places=2)  # Donacija mora biti veća od 0
+    amount: condecimal(gt=0, max_digits=10, decimal_places=2) 
 
 
-# Kreiraj tablicu pri pokretanju (samo za demo)
+
 @app.on_event("startup")
 def startup_db():
     Base.metadata.create_all(bind=engine)
 
 
-# Dependency za dobivanje DB sesije
+
 def get_db():
     db = SessionLocal()
     try:
@@ -54,17 +51,12 @@ def get_db():
     finally:
         db.close()
 
-
-# Ruta za frontend
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-# API Endpoints
-
-# CREATE
-@app.post("/api/donations", response_model=dict)
+@app.post("/api/donacije", response_model=dict)
 def create_donation(donation: DonationSchema, db=Depends(get_db)):
     db_donation = Donation(amount=donation.amount)
     db.add(db_donation)
@@ -73,19 +65,17 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
     return {"id": db_donation.id, "amount": float(db_donation.amount)}
 
 
-# READ (all)
-@app.get("/api/donations", response_model=list[dict])
+@app.get("/api/donacije", response_model=list[dict])
 def read_donations(db=Depends(get_db)):
     donations = db.query(Donation).all()
     return [{"id": d.id, "amount": float(d.amount)} for d in donations]
 
 
-# UPDATE
-@app.put("/api/donations/{donation_id}", response_model=dict)
+@app.put("/api/donacije/{donation_id}", response_model=dict)
 def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_db)):
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
     if not db_donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Donacija nije nadjena")
 
     db_donation.amount = donation.amount
     db.commit()
@@ -93,20 +83,18 @@ def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_d
     return {"id": db_donation.id, "amount": float(db_donation.amount)}
 
 
-# DELETE
-@app.delete("/api/donations/{donation_id}", response_model=dict)
+@app.delete("/api/donacije/{donation_id}", response_model=dict)
 def delete_donation(donation_id: int, db=Depends(get_db)):
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
     if not db_donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Donacija nije nadjena")
 
     db.delete(db_donation)
     db.commit()
-    return {"message": "Donation deleted successfully"}
+    return {"message": "Donacija izbrisana"}
 
 
-# GET Total Donations
-@app.get("/api/donations/total", response_model=dict)
+@app.get("/api/donacije/ukupno", response_model=dict)
 def get_total_donations(db=Depends(get_db)):
     total = db.query(Donation).with_entities(func.sum(Donation.amount)).scalar() or 0.00
-    return {"total": float(total)}
+    return {"ukupno": float(total)}
