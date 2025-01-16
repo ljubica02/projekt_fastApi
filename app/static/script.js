@@ -1,91 +1,96 @@
-// Funkcija za učitavanje svih itema
-async function loadItems() {
-    const response = await fetch('/api/items');
-    const items = await response.json();
-    const itemsList = document.getElementById('items-list');
-    itemsList.innerHTML = '';
+// Funkcija za učitavanje svih donacija
+async function loadDonations() {
+    const response = await fetch('/api/donations');
+    const donations = await response.json();
+    const donationsList = document.getElementById('donations-list');
+    donationsList.innerHTML = '';
 
-    items.forEach(item => {
+    let total = 0;
+
+    donations.forEach(donation => {
+        total += donation.amount;
         const li = document.createElement('li');
         li.innerHTML = `
-            ${item.name}
-            <button class="edit" onclick="editItem(${item.id}, '${item.name}')">Edit</button>
-            <button class="delete" onclick="deleteItem(${item.id})">Delete</button>
+            ${donation.amount.toFixed(2)} KN
+            <button class="edit" onclick="editDonation(${donation.id}, ${donation.amount})">Uredi</button>
+            <button class="delete" onclick="deleteDonation(${donation.id})">Obriši</button>
         `;
-        itemsList.appendChild(li);
+        donationsList.appendChild(li);
     });
+
+    document.getElementById('total-donations').innerText = total.toFixed(2);
 }
 
-// Funkcija za kreiranje novog itema
-async function createItem() {
-    const nameInput = document.getElementById('create-name');
-    const name = nameInput.value.trim();
-    if (name === '') {
-        alert('Item name cannot be empty.');
+// Funkcija za kreiranje nove donacije
+async function createDonation() {
+    const amountInput = document.getElementById('create-amount');
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+        alert('Iznos donacije mora biti veći od 0.');
         return;
     }
 
-    const response = await fetch('/api/items', {
+    const response = await fetch('/api/donations', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ amount })
     });
 
     if (response.ok) {
-        nameInput.value = '';
-        loadItems();
+        amountInput.value = '';
+        loadDonations();
     } else {
-        alert('Failed to create item.');
+        alert('Neuspjelo dodavanje donacije.');
     }
 }
 
-// Funkcija za uređivanje postojećeg itema
-function editItem(id, currentName) {
-    const newName = prompt('Enter new name for the item:', currentName);
-    if (newName === null) return; // Korisnik je otkazao
+// Funkcija za uređivanje postojeće donacije
+function editDonation(id, currentAmount) {
+    const newAmount = prompt('Unesi novi iznos donacije:', currentAmount);
+    if (newAmount === null) return; // Korisnik je otkazao
 
-    const trimmedName = newName.trim();
-    if (trimmedName === '') {
-        alert('Item name cannot be empty.');
+    const parsedAmount = parseFloat(newAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        alert('Iznos donacije mora biti veći od 0.');
         return;
     }
 
-    updateItem(id, trimmedName);
+    updateDonation(id, parsedAmount);
 }
 
-// Funkcija za ažuriranje itema
-async function updateItem(id, name) {
-    const response = await fetch(`/api/items/${id}`, {
+// Funkcija za ažuriranje donacije
+async function updateDonation(id, amount) {
+    const response = await fetch(`/api/donations/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ amount })
     });
 
     if (response.ok) {
-        loadItems();
+        loadDonations();
     } else {
-        alert('Failed to update item.');
+        alert('Neuspjelo ažuriranje donacije.');
     }
 }
 
-// Funkcija za brisanje itema
-async function deleteItem(id) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+// Funkcija za brisanje donacije
+async function deleteDonation(id) {
+    if (!confirm('Jesi li siguran da želiš obrisati ovu donaciju?')) return;
 
-    const response = await fetch(`/api/items/${id}`, {
+    const response = await fetch(`/api/donations/${id}`, {
         method: 'DELETE'
     });
 
     if (response.ok) {
-        loadItems();
+        loadDonations();
     } else {
-        alert('Failed to delete item.');
+        alert('Neuspjelo brisanje donacije.');
     }
 }
 
-// Učitaj iteme kada se stranica učita
-window.onload = loadItems;
+// Učitaj donacije kada se stranica učita
+window.onload = loadDonations;

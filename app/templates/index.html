@@ -1,24 +1,29 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FastAPI CRUD App</title>
+    <title>Donacije</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>FastAPI CRUD Application</h1>
+    <h1>Večerašnje donacije</h1>
 
     <div>
-        <h2>Create Item</h2>
-        <input type="text" id="create-name" placeholder="Item Name">
-        <button onclick="createItem()">Create</button>
+        <h2>Dodaj donaciju</h2>
+        <input type="number" id="create-amount" placeholder="Iznos donacije" step="0.01" min="0.01">
+        <button onclick="createDonation()">Dodaj</button>
     </div>
 
     <div>
-        <h2>Items</h2>
-        <ul id="items-list">
-            <!-- Items će se učitati ovdje -->
+        <h2>Donacije</h2>
+        <ul id="donations-list">
+      
         </ul>
+    </div>
+
+    <div>
+        <h2>Ukupno Donacija: <span id="total-donations">0.00</span> KM</h2>
     </div>
 
     <script src="/static/script.js"></script>
