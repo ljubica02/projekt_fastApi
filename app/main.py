@@ -11,8 +11,7 @@ DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "my-secret-pw")
 DB_NAME = os.environ.get("DB_NAME", "mydatabase")
 
-DATABASE_URL = f"mysql+mysqlconnector://{DB_USER}:{
-    DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
+DATABASE_URL = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
