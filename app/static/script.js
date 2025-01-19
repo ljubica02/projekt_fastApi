@@ -1,4 +1,4 @@
-
+//učitava
 async function loadDonations() {
     const response = await fetch('/api/donacije');
     const donations = await response.json();

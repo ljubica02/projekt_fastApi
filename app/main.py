@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, Column, Integer, Numeric
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 import os
-
+#Postavke baze podataka
 DB_HOST = os.environ.get("DB_HOST", "mysql")
 DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "my-secret-pw")
@@ -32,7 +32,7 @@ class Donation(Base):
     amount = Column(Numeric(10, 2), nullable=False)  
 
 
-
+#za validaciju podataka
 class DonationSchema(BaseModel):
     amount: condecimal(gt=0, max_digits=10, decimal_places=2) 
 
@@ -43,7 +43,7 @@ def startup_db():
     Base.metadata.create_all(bind=engine)
 
 
-
+#funkcija za upravljanje s bazom podataka
 def get_db():
     db = SessionLocal()
     try:
@@ -55,7 +55,7 @@ def get_db():
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-
+#dodavanje
 @app.post("/api/donacije", response_model=dict)
 def create_donation(donation: DonationSchema, db=Depends(get_db)):
     db_donation = Donation(amount=donation.amount)
@@ -64,7 +64,7 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
     db.refresh(db_donation)
     return {"id": db_donation.id, "amount": float(db_donation.amount)}
 
-
+#pregled
 @app.get("/api/donacije", response_model=list[dict])
 def read_donations(db=Depends(get_db)):
     donations = db.query(Donation).all()
