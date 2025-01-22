@@ -10,8 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Kopiraj ostatak koda
 COPY app/ /app
-COPY ./static /app/static
-COPY ./templates /app/templates
 
 
 # Expose port 5000 (FastAPI)
