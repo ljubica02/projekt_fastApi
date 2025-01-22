@@ -36,7 +36,6 @@ class Organization(Base):
     __tablename__ = 'organizacije'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    donations = relationship("Donation", back_populates="organization")
 
 
 class Donation(Base):
@@ -45,8 +44,7 @@ class Donation(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     user_id = Column(Integer, ForeignKey('korisnici.id'), nullable=False)
     category_id = Column(Integer, ForeignKey('kategorije.id'), nullable=False)
-    organization_id = Column(Integer, ForeignKey('organizacije.id'), nullable=True)
-    organization = Column(String(100), nullable=True)  
+    organization = Column(String(100), nullable=True)
 
 
 class User(Base):
