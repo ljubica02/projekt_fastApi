@@ -45,6 +45,7 @@ class Donation(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     user_id = Column(Integer, ForeignKey('korisnici.id'), nullable=False)
     category_id = Column(Integer, ForeignKey('kategorije.id'), nullable=False)
+    organization_id = Column(Integer, ForeignKey('organizacije.id'), nullable=True)
     organization = Column(String(100), nullable=True)  
 
 
