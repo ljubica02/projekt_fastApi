@@ -2,7 +2,7 @@ async function loadOrganizations() {
     const response = await fetch('/api/organizations');
     const organizations = await response.json();
     const orgSelect = document.getElementById('organization_id');
-    orgSelect.innerHTML = ''; // Očisti postojeće opcije
+    orgSelect.innerHTML = ''; 
     organizations.forEach(org => {
         const option = document.createElement('option');
         option.value = org.id;
@@ -31,7 +31,7 @@ async function createDonation() {
             amount: amount,
             user_id: userId,
             category_id: categoryId,
-            organization: organization
+            organization: organization  // Organizacija može biti null
         })
     });
 
@@ -54,9 +54,9 @@ async function loadDonations() {
         li.textContent = `
             Iznos: ${donation.amount} KM, Korisnik ID: ${donation.user_id}, 
             Kategorija ID: ${donation.category_id}, 
-            Organizacija: ${donation.organization_name || 'Nema'}
+            Organizacija: ${donation.organization || ''}
         `;
-     donationsList.appendChild(li);
+        donationsList.appendChild(li);
     });
 }
 

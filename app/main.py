@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, condecimal
-from sqlalchemy import create_engine, Column, Integer, Numeric, String, ForeignKey, func
+from sqlalchemy import create_engine, Column, Integer, Numeric, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from redis import Redis
 import os
@@ -20,7 +20,7 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# Postavke Redisa
+# Redis
 REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
 redis_client = Redis(host=REDIS_HOST, port=6379, decode_responses=True)
 
@@ -32,14 +32,25 @@ templates = Jinja2Templates(directory="templates")
 
 
 # Modeli baze podataka
+class Organization(Base):
+    __tablename__ = 'organizacije'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    donations = relationship("Donation", back_populates="organization")
+
+
 class Donation(Base):
     __tablename__ = 'donacije'
     id = Column(Integer, primary_key=True, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
     user_id = Column(Integer, ForeignKey('korisnici.id'), nullable=False)
     category_id = Column(Integer, ForeignKey('kategorije.id'), nullable=False)
-    organization_id = Column(Integer, ForeignKey('organizacije.id'), nullable=True) 
-    organization = relationship("Organization", back_populates="donations")
+    organization = Column(String(100), nullable=True)  
+
+    user = relationship("User", back_populates="donations")
+    category = relationship("Category", back_populates="donations")
+    organization_relation = relationship("Organization", back_populates="donations")
+
 
 class User(Base):
     __tablename__ = 'korisnici'
@@ -47,21 +58,12 @@ class User(Base):
     name = Column(String(50), nullable=False)
     donations = relationship("Donation", back_populates="user")
 
+
 class Category(Base):
     __tablename__ = 'kategorije'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     donations = relationship("Donation", back_populates="category")
-
-class Organization(Base):
-    __tablename__ = 'organizacije'
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    donations = relationship("Donation", back_populates="organization")
-
-Donation.user = relationship("User", back_populates="donations")
-Donation.category = relationship("Category", back_populates="donations")
-Donation.organization = relationship("Organization", back_populates="donations")
 
 
 # Validacija podataka
@@ -69,7 +71,8 @@ class DonationSchema(BaseModel):
     amount: condecimal(gt=0, max_digits=10, decimal_places=2)
     user_id: int
     category_id: int
-    organization: str | None = None
+    organization: str | None = None 
+
 
 class OrganizationSchema(BaseModel):
     name: str
@@ -81,7 +84,6 @@ def startup_db():
     Base.metadata.create_all(bind=engine)
 
 
-# Funkcija za upravljanje s bazom podataka
 def get_db():
     db = SessionLocal()
     try:
@@ -90,7 +92,7 @@ def get_db():
         db.close()
 
 
-# Rute za organizacije
+# Rute
 @app.post("/api/organizations", response_model=dict)
 def create_organization(org: OrganizationSchema, db=Depends(get_db)):
     db_org = Organization(name=org.name)
@@ -98,6 +100,7 @@ def create_organization(org: OrganizationSchema, db=Depends(get_db)):
     db.commit()
     db.refresh(db_org)
     return {"id": db_org.id, "name": db_org.name}
+
 
 @app.get("/api/organizations", response_model=list[dict])
 def read_organizations(db=Depends(get_db)):
@@ -112,7 +115,7 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
         amount=donation.amount,
         user_id=donation.user_id,
         category_id=donation.category_id,
-        organization=donation.organization
+        organization=donation.organization  
     )
     db.add(db_donation)
     db.commit()
@@ -124,6 +127,7 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
         "amount": float(db_donation.amount),
         "organization": db_donation.organization
     }
+
 
 @app.get("/api/donacije", response_model=list[dict])
 def read_donations(db=Depends(get_db)):
@@ -144,6 +148,7 @@ def read_donations(db=Depends(get_db)):
     ]
     redis_client.set("donations_list", str(result), ex=60)
     return result
+
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
