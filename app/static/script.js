@@ -22,16 +22,12 @@ async function loadDonations() {
 
 // Dodati donaciju
 async function createDonation() {
-    const amountInput = document.getElementById('create-amount');
-    const userSelect = document.getElementById('user-select');
-    const categorySelect = document.getElementById('category-select');
+    const amount = parseFloat(document.getElementById("amount").value);
+    const userId = parseInt(document.getElementById("user_id").value);
+    const categoryId = parseInt(document.getElementById("category_id").value);
 
-    const amount = parseFloat(amountInput.value);
-    const user_id = parseInt(userSelect.value);
-    const category_id = parseInt(categorySelect.value);
-
-    if (isNaN(amount) || amount <= 0) {
-        alert('Iznos donacije mora biti veći od 0.');
+    if (isNaN(amount) || amount <= 0 || isNaN(userId) || isNaN(categoryId)) {
+        alert("Molimo unesite ispravne vrijednosti.");
         return;
     }
 
@@ -40,14 +36,18 @@ async function createDonation() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ amount, user_id, category_id })
+        body: JSON.stringify({
+            amount: amount,
+            user_id: userId,
+            category_id: categoryId
+        })
     });
 
     if (response.ok) {
-        amountInput.value = '';
+        alert("Donacija uspješno dodana!");
         loadDonations();
     } else {
-        alert('Neuspjelo dodavanje donacije.');
+        alert("Greška prilikom dodavanja donacije.");
     }
 }
 
