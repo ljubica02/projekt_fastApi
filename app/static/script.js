@@ -22,13 +22,21 @@ async function loadDonations() {
 
 // Dodati donaciju
 async function createDonation() {
+    console.log("Amount element:", document.getElementById("amount"));
+    console.log("User ID element:", document.getElementById("user_id"));
+    console.log("Category ID element:", document.getElementById("category_id"));
+
     const amount = parseFloat(document.getElementById("amount").value);
-    
     const userId = parseInt(document.getElementById("user_id").value);
     const categoryId = parseInt(document.getElementById("category_id").value);
 
     if (isNaN(amount) || amount <= 0 || isNaN(userId) || isNaN(categoryId)) {
         alert("Molimo unesite ispravne vrijednosti.");
+        return;
+    }
+
+    if (!amountElement || !userIdElement || !categoryIdElement) {
+        alert("Nisu pronađeni svi potrebni elementi.");
         return;
     }
 
