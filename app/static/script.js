@@ -15,9 +15,9 @@ async function createDonation() {
     const amount = parseFloat(document.getElementById("amount").value);
     const userId = parseInt(document.getElementById("user_id").value);
     const categoryId = parseInt(document.getElementById("category_id").value);
-    const organizationId = parseInt(document.getElementById("organization_id").value);
+    const organization = document.getElementById("organization").value || null;
 
-    if (isNaN(amount) || amount <= 0 || isNaN(userId) || isNaN(categoryId) || isNaN(organizationId)) {
+    if (isNaN(amount) || amount <= 0 || isNaN(userId) || isNaN(categoryId)) {
         alert("Molimo unesite ispravne vrijednosti.");
         return;
     }
@@ -31,7 +31,7 @@ async function createDonation() {
             amount: amount,
             user_id: userId,
             category_id: categoryId,
-            organization_id: organizationId
+            organization: organization
         })
     });
 
@@ -51,8 +51,12 @@ async function loadDonations() {
 
     donations.forEach(donation => {
         const li = document.createElement('li');
-        li.textContent = `Iznos: ${donation.amount} KM, Korisnik ID: ${donation.user_id}, Kategorija ID: ${donation.category_id}, Organizacija ID: ${donation.organization_id}`;
-        donationsList.appendChild(li);
+        li.textContent = `
+            Iznos: ${donation.amount} KM, Korisnik ID: ${donation.user_id}, 
+            Kategorija ID: ${donation.category_id}, 
+            Organizacija: ${donation.organization_name || 'Nema'}
+        `;
+     donationsList.appendChild(li);
     });
 }
 

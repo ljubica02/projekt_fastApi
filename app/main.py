@@ -38,7 +38,7 @@ class Donation(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     user_id = Column(Integer, ForeignKey('korisnici.id'), nullable=False)
     category_id = Column(Integer, ForeignKey('kategorije.id'), nullable=False)
-    organization_id = Column(Integer, ForeignKey('organizacije.id'))
+    organization = Column(String(100), nullable=True) 
 
 class User(Base):
     __tablename__ = 'korisnici'
@@ -69,7 +69,7 @@ class DonationSchema(BaseModel):
     amount: condecimal(gt=0, max_digits=10, decimal_places=2)
     user_id: int
     category_id: int
-    organization_id: int
+    organization: str | None = None
 
 class OrganizationSchema(BaseModel):
     name: str
@@ -112,24 +112,39 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
         amount=donation.amount,
         user_id=donation.user_id,
         category_id=donation.category_id,
-        organization_id=donation.organization_id
+        organization=donation.organization
     )
     db.add(db_donation)
     db.commit()
     db.refresh(db_donation)
-    redis_client.delete("donations_list")
-    redis_client.delete("total_donations")
-    return {"id": db_donation.id, "amount": float(db_donation.amount)}
+    redis_client.delete("donations_list")  # Očisti keš
+    redis_client.delete("total_donations")  # Očisti keš
+    return {
+        "id": db_donation.id,
+        "amount": float(db_donation.amount),
+        "organization": db_donation.organization
+    }
 
 @app.get("/api/donacije", response_model=list[dict])
 def read_donations(db=Depends(get_db)):
+    cached_donations = redis_client.get("donations_list")
+    if cached_donations:
+        return eval(cached_donations)
+
     donations = db.query(Donation).all()
     result = [
-        {"id": d.id, "amount": float(d.amount), "user_id": d.user_id, "category_id": d.category_id, "organization_id": d.organization_id}
+        {
+            "id": d.id,
+            "amount": float(d.amount),
+            "user_id": d.user_id,
+            "category_id": d.category_id,
+            "organization": d.organization
+        }
         for d in donations
     ]
+    redis_client.set("donations_list", str(result), ex=60)
     return result
-
+    
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
