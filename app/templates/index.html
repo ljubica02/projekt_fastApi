@@ -11,17 +11,30 @@
     <div>
         <h2>Dodaj donaciju</h2>
         <input type="number" id="amount" placeholder="Iznos donacije" step="0.01" min="0.01">
+
+        <label for="user_id">Korisnik:</label>
         <select id="user_id">
             <option value="1">Korisnik 1</option>
             <option value="2">Korisnik 2</option>
         </select>
+
+        <label for="category_id">Kategorija:</label>
         <select id="category_id">
             <option value="1">Kategorija 1</option>
             <option value="2">Kategorija 2</option>
         </select>
+
+        <label for="payment_method_id">Metoda:</label>
+        <select id="payment_method_id">
+            <option value="1">Metoda 1</option>
+            <option value="2">Metoda 2</option>
+        </select>
+
         <input type="text" id="organization" placeholder="Organizacija (opcionalno)">
         <button onclick="createDonation()">Dodaj</button>
     </div>
+
+    <hr>
 
     <div>
         <h2>Donacije</h2>
