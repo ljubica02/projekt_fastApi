@@ -3,11 +3,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, condecimal
-from sqlalchemy import create_engine, Column, Integer, Numeric
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine, Column, Integer, Numeric, String, ForeignKey, func
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
 from redis import Redis
-
+<
 import os
 #Postavke baze podataka
 DB_HOST = os.environ.get("DB_HOST", "mysql")
