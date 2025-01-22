@@ -38,7 +38,8 @@ class Donation(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     user_id = Column(Integer, ForeignKey('korisnici.id'), nullable=False)
     category_id = Column(Integer, ForeignKey('kategorije.id'), nullable=False)
-    organization = Column(String(100), nullable=True) 
+    organization_id = Column(Integer, ForeignKey('organizacije.id'), nullable=True) 
+    organization = relationship("Organization", back_populates="donations")
 
 class User(Base):
     __tablename__ = 'korisnici'
@@ -57,7 +58,6 @@ class Organization(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     donations = relationship("Donation", back_populates="organization")
-
 
 Donation.user = relationship("User", back_populates="donations")
 Donation.category = relationship("Category", back_populates="donations")
@@ -144,7 +144,7 @@ def read_donations(db=Depends(get_db)):
     ]
     redis_client.set("donations_list", str(result), ex=60)
     return result
-    
+
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
