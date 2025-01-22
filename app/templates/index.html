@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +7,6 @@
 </head>
 <body>
     <h1>Donacije</h1>
-
-
 
     <div>
         <h2>Dodaj donaciju</h2>
@@ -22,17 +19,15 @@
             <option value="1">Kategorija 1</option>
             <option value="2">Kategorija 2</option>
         </select>
+        <select id="organization_id">
+            <!-- Organizacije će biti dodane dinamički -->
+        </select>
         <button onclick="createDonation()">Dodaj</button>
     </div>
-
 
     <div>
         <h2>Donacije</h2>
         <ul id="donations-list"></ul>
-    </div>
-
-    <div>
-        <h2>Ukupno Donacija: <span id="total-donations">0.00</span> KM</h2>
     </div>
 
     <script src="/static/script.js" defer></script>

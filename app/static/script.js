@@ -1,41 +1,26 @@
-async function loadDonations() {
-    const response = await fetch('/api/donacije');
-    const donations = await response.json();
-    const donationsList = document.getElementById('donations-list');
-    donationsList.innerHTML = '';
-
-    let total = 0;
-
-    donations.forEach(donation => {
-        total += donation.amount;
-        const li = document.createElement('li');
-        li.innerHTML = `
-            ${donation.amount.toFixed(2)} KM (Korisnik ID: ${donation.user_id}, Kategorija ID: ${donation.category_id})
-            <button class="edit" onclick="editDonation(${donation.id}, ${donation.amount}, ${donation.user_id}, ${donation.category_id})">Uredi</button>
-            <button class="delete" onclick="deleteDonation(${donation.id})">Obriši</button>
-        `;
-        donationsList.appendChild(li);
+async function loadOrganizations() {
+    const response = await fetch('/api/organizations');
+    const organizations = await response.json();
+    const orgSelect = document.getElementById('organization_id');
+    orgSelect.innerHTML = ''; // Očisti postojeće opcije
+    organizations.forEach(org => {
+        const option = document.createElement('option');
+        option.value = org.id;
+        option.textContent = org.name;
+        orgSelect.appendChild(option);
     });
-
-    document.getElementById('total-donations').innerText = total.toFixed(2);
-    console.log('Donacije:', donations);
 }
 
-// Dodati donaciju
 async function createDonation() {
-    console.log("Amount element:", document.getElementById("amount"));
-    console.log("User ID element:", document.getElementById("user_id"));
-    console.log("Category ID element:", document.getElementById("category_id"));
-
     const amount = parseFloat(document.getElementById("amount").value);
     const userId = parseInt(document.getElementById("user_id").value);
     const categoryId = parseInt(document.getElementById("category_id").value);
+    const organizationId = parseInt(document.getElementById("organization_id").value);
 
-    if (isNaN(amount) || amount <= 0 || isNaN(userId) || isNaN(categoryId)) {
+    if (isNaN(amount) || amount <= 0 || isNaN(userId) || isNaN(categoryId) || isNaN(organizationId)) {
         alert("Molimo unesite ispravne vrijednosti.");
         return;
     }
-
 
     const response = await fetch('/api/donacije', {
         method: 'POST',
@@ -45,7 +30,8 @@ async function createDonation() {
         body: JSON.stringify({
             amount: amount,
             user_id: userId,
-            category_id: categoryId
+            category_id: categoryId,
+            organization_id: organizationId
         })
     });
 
@@ -57,57 +43,20 @@ async function createDonation() {
     }
 }
 
-// uređivanje postojeće donacije
-function editDonation(id, currentAmount, currentUserId, currentCategoryId) {
-    const newAmount = prompt('Unesi novi iznos donacije:', currentAmount);
-    const newUserId = prompt('Unesi novi ID korisnika:', currentUserId);
-    const newCategoryId = prompt('Unesi novi ID kategorije:', currentCategoryId);
+async function loadDonations() {
+    const response = await fetch('/api/donacije');
+    const donations = await response.json();
+    const donationsList = document.getElementById('donations-list');
+    donationsList.innerHTML = '';
 
-    if (newAmount === null || newUserId === null || newCategoryId === null) return;
-
-    const parsedAmount = parseFloat(newAmount);
-    const parsedUserId = parseInt(newUserId);
-    const parsedCategoryId = parseInt(newCategoryId);
-
-    if (isNaN(parsedAmount) || parsedAmount <= 0 || isNaN(parsedUserId) || isNaN(parsedCategoryId)) {
-        alert('Podaci nisu ispravni.');
-        return;
-    }
-
-    updateDonation(id, parsedAmount, parsedUserId, parsedCategoryId);
-}
-
-// ažuriranje donacije
-async function updateDonation(id, amount, user_id, category_id) {
-    const response = await fetch(`/api/donacije/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ amount, user_id, category_id })
+    donations.forEach(donation => {
+        const li = document.createElement('li');
+        li.textContent = `Iznos: ${donation.amount} KM, Korisnik ID: ${donation.user_id}, Kategorija ID: ${donation.category_id}, Organizacija ID: ${donation.organization_id}`;
+        donationsList.appendChild(li);
     });
-
-    if (response.ok) {
-        loadDonations();
-    } else {
-        alert('Neuspjelo ažuriranje donacije.');
-    }
 }
 
-
-async function deleteDonation(id) {
-    if (!confirm('Jesi li siguran da želiš obrisati ovu donaciju?')) return;
-
-    const response = await fetch(`/api/donacije/${id}`, {
-        method: 'DELETE'
-    });
-
-    if (response.ok) {
-        loadDonations();
-    } else {
-        alert('Neuspjelo brisanje donacije.');
-    }
-}
-
-
-window.onload = loadDonations;
+window.onload = function () {
+    loadDonations();
+    loadOrganizations();
+};
