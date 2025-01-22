@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, Column, Integer, Numeric, String, ForeignK
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
 from redis import Redis
-<
+
 import os
 #Postavke baze podataka
 DB_HOST = os.environ.get("DB_HOST", "mysql")
