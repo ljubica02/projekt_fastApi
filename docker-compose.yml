@@ -2,9 +2,6 @@ services:
   app:
     build: .
     container_name: fastapi_app
-    volumes:
-      - ./static:/app/static
-      - ./templates:/app/templates
     ports:
       - "5000:5000"
     depends_on:
