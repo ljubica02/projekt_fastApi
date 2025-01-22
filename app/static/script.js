@@ -23,6 +23,7 @@ async function loadDonations() {
 // Dodati donaciju
 async function createDonation() {
     const amount = parseFloat(document.getElementById("amount").value);
+    
     const userId = parseInt(document.getElementById("user_id").value);
     const categoryId = parseInt(document.getElementById("category_id").value);
 
