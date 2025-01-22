@@ -36,10 +36,6 @@ async function createDonation() {
         return;
     }
 
-    if (!amountElement || !userIdElement || !categoryIdElement) {
-        alert("Nisu pronađeni svi potrebni elementi.");
-        return;
-    }
 
     const response = await fetch('/api/donacije', {
         method: 'POST',

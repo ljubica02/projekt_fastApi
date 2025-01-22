@@ -27,7 +27,7 @@ redis_client = Redis(host=REDIS_HOST, port=6379, decode_responses=True)
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static", html=True), name="static")d
 
 templates = Jinja2Templates(directory="templates")
 
