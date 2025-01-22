@@ -18,6 +18,7 @@ async function loadDonations() {
     });
 
     document.getElementById('total-donations').innerText = total.toFixed(2);
+    console.log('Donacije:', donations);
 }
 
 // Dodati donaciju
