@@ -63,7 +63,7 @@ class Transaction(Base):
 Donation.user = relationship("User", back_populates="donations")
 Donation.category = relationship("Category", back_populates="donations")
 
-# za validaciju podataka 
+#za validaciju podataka
 class DonationSchema(BaseModel):
     amount: condecimal(gt=0, max_digits=10, decimal_places=2)
     user_id: int
