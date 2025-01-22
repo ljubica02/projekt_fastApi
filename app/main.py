@@ -43,7 +43,9 @@ class Donation(Base):
     id = Column(Integer, primary_key=True, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
     user_id = Column(Integer, ForeignKey('korisnici.id'), nullable=False)
+    user = relationship("User", back_populates="donations")
     category_id = Column(Integer, ForeignKey('kategorije.id'), nullable=False)
+    category = relationship("Category", back_populates="donations")
     organization = Column(String(100), nullable=True)
 
 
