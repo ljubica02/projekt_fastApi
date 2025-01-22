@@ -9,17 +9,26 @@
 <body>
     <h1>Donacije</h1>
 
+
+
     <div>
         <h2>Dodaj donaciju</h2>
         <input type="number" id="create-amount" placeholder="Iznos donacije" step="0.01" min="0.01">
+        <select id="user-select">
+            <option value="1">Korisnik 1</option>
+            <option value="2">Korisnik 2</option>
+        </select>
+        <select id="category-select">
+            <option value="1">Kategorija 1</option>
+            <option value="2">Kategorija 2</option>
+        </select>
         <button onclick="createDonation()">Dodaj</button>
     </div>
 
+
     <div>
         <h2>Donacije</h2>
-        <ul id="donations-list">
-      
-        </ul>
+        <ul id="donations-list"></ul>
     </div>
 
     <div>
