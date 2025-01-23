@@ -11,11 +11,11 @@ async function loadDonations() {
             + `Iznos: ${donation.amount} KM, `
             + `Korisnik: ${donation.user_id}, `
             + `Kategorija: ${donation.category_id}, `
-            + `Metoda: ${donation.payment_method_id}, `
+            + `Metoda plaćanja: ${donation.payment_method_id}, `
             + `Organizacija: ${donation.organization || ''}, `
             + `Vrijeme: ${donation.time || ''} `
-            + `<button onclick="editDonation(${encodeURIComponent(JSON.stringify(donation))})">Edit</button>`
-            + `<button onclick="deleteDonation(${donation.id})">Delete</button>`;
+            + `<button class="edit" onclick="editDonation(${encodeURIComponent(JSON.stringify(donation))})">Edit</button>`
+            + `<button class="delete" onclick="deleteDonation(${donation.id})">Delete</button>`;
 
         donationsList.appendChild(li);
     });
@@ -33,7 +33,7 @@ async function createDonation() {
         return;
     }
     if (!userId || !categoryId || !paymentMethodId) {
-        alert("Nedostaje user_id, category_id ili payment_method_id.");
+        alert("Nedostaje korisnik, kategorija ili metoda plaćanja.");
         return;
     }
 
@@ -59,28 +59,24 @@ async function createDonation() {
     }
 }
 
-/**
- * Ova funkcija koristi prompt() za jednostavno ažuriranje.
- * U produkciji biste radije koristili modal ili posebnu formu.
- */
 async function editDonation(donationObjString) {
-    // 'donationObjString' je JSON string, pa ga moramo parsirati
+ 
     const donation = JSON.parse(donationObjString);
 
-    // Prompt za svako polje
-    const newAmount = prompt("Novi iznos:", donation.amount);
-    if (newAmount === null) return; // ako user stisne Cancel
+  
+    const newAmount = prompt("Novi iznos (trenutno: " + donation.amount + "):", donation.amount);
+    if (newAmount === null) return;
 
-    const newUserId = prompt("Novi user_id:", donation.user_id);
+    const newUserId = prompt("Novi user_id (trenutno: " + donation.user_id + "):", donation.user_id);
     if (newUserId === null) return;
 
-    const newCategoryId = prompt("Novi category_id:", donation.category_id);
+    const newCategoryId = prompt("Nova category_id (trenutno: " + donation.category_id + "):", donation.category_id);
     if (newCategoryId === null) return;
 
-    const newPaymentMethodId = prompt("Novi payment_method_id:", donation.payment_method_id);
+    const newPaymentMethodId = prompt("Nova payment_method_id (trenutno: " + donation.payment_method_id + "):", donation.payment_method_id);
     if (newPaymentMethodId === null) return;
 
-    const newOrganization = prompt("Nova organizacija:", donation.organization);
+    const newOrganization = prompt("Nova organizacija (trenutno: " + (donation.organization || '') + "):", donation.organization);
     if (newOrganization === null) return;
 
     const data = {
@@ -91,7 +87,6 @@ async function editDonation(donationObjString) {
         organization: newOrganization
     };
 
-    // Pozivamo PUT /api/donacije/{id}
     const response = await fetch(`/api/donacije/${donation.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -108,7 +103,7 @@ async function editDonation(donationObjString) {
 }
 
 async function deleteDonation(donationId) {
-    if (!confirm("Da li ste sigurni da želite obrisati donaciju ID=" + donationId + "?")) {
+    if (!confirm(`Da li ste sigurni da želite obrisati donaciju ID=${donationId}?`)) {
         return;
     }
 
@@ -124,7 +119,6 @@ async function deleteDonation(donationId) {
     }
 }
 
-// Inicijalno učitavanje donacija
 window.onload = function() {
     loadDonations();
 };

@@ -9,7 +9,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from redis import Redis
 import os
 
-# --------------------- BAZA - KONEKCIJA ---------------------
 DB_HOST = os.environ.get("DB_HOST", "mysql")
 DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "my-secret-pw")
@@ -21,16 +20,16 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# --------------------- REDIS ---------------------
+# redis
 REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
 redis_client = Redis(host=REDIS_HOST, port=6379, decode_responses=True)
 
-# --------------------- FASTAPI APP ---------------------
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# --------------------- MODELI (5 tablica) ---------------------
+
 class User(Base):
     __tablename__ = "korisnici"
     id = Column(Integer, primary_key=True, index=True)
@@ -51,7 +50,7 @@ class Organization(Base):
     __tablename__ = "organizacije"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    # Bez relationship, Donation ima samo plain text "organization".
+
 
 
 class PaymentMethod(Base):
@@ -78,7 +77,6 @@ class Donation(Base):
     payment_method_id = Column(Integer, ForeignKey('metode_placanja.id'), nullable=False)
     payment_method = relationship("PaymentMethod", back_populates="donations")
 
-# --------------------- Pydantic Sheme ---------------------
 class OrganizationSchema(BaseModel):
     name: str
 
@@ -92,15 +90,6 @@ class DonationSchema(BaseModel):
     organization: str | None = None
     payment_method_id: int
 
-# (Opcionalno) Shema za edit ako želite druge validacije:
-# class DonationUpdateSchema(BaseModel):
-#     amount: condecimal(gt=0, max_digits=10, decimal_places=2) | None = None
-#     user_id: int | None = None
-#     category_id: int | None = None
-#     organization: str | None = None
-#     payment_method_id: int | None = None
-
-# --------------------- Kreiranje tablica ---------------------
 @app.on_event("startup")
 def startup_db():
     Base.metadata.create_all(bind=engine)
@@ -112,8 +101,6 @@ def get_db():
     finally:
         db.close()
 
-
-# --------------------- Rute: Organization ---------------------
 @app.post("/api/organizations", response_model=dict)
 def create_organization(org: OrganizationSchema, db=Depends(get_db)):
     db_org = Organization(name=org.name)
@@ -128,8 +115,6 @@ def read_organizations(db=Depends(get_db)):
     organizations = db.query(Organization).all()
     return [{"id": o.id, "name": o.name} for o in organizations]
 
-
-# --------------------- Rute: PaymentMethod ---------------------
 @app.post("/api/payment_methods", response_model=dict)
 def create_payment_method(pm: PaymentMethodSchema, db=Depends(get_db)):
     new_pm = PaymentMethod(name=pm.name)
@@ -145,7 +130,6 @@ def read_payment_methods(db=Depends(get_db)):
     return [{"id": m.id, "name": m.name} for m in methods]
 
 
-# --------------------- Rute: Donacije (Create, Read) ---------------------
 @app.post("/api/donacije", response_model=dict)
 def create_donation(donation: DonationSchema, db=Depends(get_db)):
     db_donation = Donation(
@@ -194,7 +178,7 @@ def read_donations(db=Depends(get_db)):
     return result
 
 
-# --------------------- Rute: Donacije (Update, Delete) ---------------------
+
 @app.put("/api/donacije/{donation_id}", response_model=dict)
 def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_db)):
     """
@@ -227,7 +211,6 @@ def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_d
         "time": db_donation.time.isoformat() if db_donation.time else None
     }
 
-
 @app.delete("/api/donacije/{donation_id}", response_model=dict)
 def delete_donation(donation_id: int, db=Depends(get_db)):
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
@@ -243,8 +226,6 @@ def delete_donation(donation_id: int, db=Depends(get_db)):
 
     return {"message": "Donation deleted successfully", "id": donation_id}
 
-
-# --------------------- POČETNA STRANICA ---------------------
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
