@@ -14,7 +14,6 @@ async function loadDonations() {
             + `Metoda plaćanja: ${donation.payment_method_id}, `
             + `Organizacija: ${donation.organization || ''}, `
             + `Vrijeme: ${donation.time || ''} `
-            + `<button class="edit" onclick="editDonation(${encodeURIComponent(JSON.stringify(donation))})">Edit</button>`
             + `<button class="delete" onclick="deleteDonation(${donation.id})">Delete</button>`;
 
         donationsList.appendChild(li);
