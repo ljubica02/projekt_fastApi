@@ -1,5 +1,3 @@
-let editingDonationId = null; // ID donacije koja se uređuje
-
 async function loadDonations() {
     const response = await fetch('/api/donacije');
     const donations = await response.json();
@@ -24,7 +22,7 @@ async function loadDonations() {
 
 async function createDonation() {
     const amount = parseFloat(document.getElementById("amount").value);
-    const userName = document.getElementById("user_name").value.trim();
+    const userId = parseInt(document.getElementById("user_id").value);
     const categoryId = parseInt(document.getElementById("category_id").value);
     const paymentMethodId = parseInt(document.getElementById("payment_method_id").value);
     const organization = document.getElementById("organization").value || null;
@@ -33,33 +31,14 @@ async function createDonation() {
         alert("Molimo unesite ispravan iznos donacije (veći od 0).");
         return;
     }
-    if (!userName) {
-        alert("Molimo unesite ime korisnika.");
-        return;
-    }
-    if (!categoryId || !paymentMethodId) {
-        alert("Nedostaje kategorija ili metoda plaćanja.");
+    if (!userId || !categoryId || !paymentMethodId) {
+        alert("Nedostaje korisnik, kategorija ili metoda plaćanja.");
         return;
     }
 
-    // Kreiraj korisnika
-    const userResponse = await fetch('/api/korisnici', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: userName })
-    });
-
-    if (!userResponse.ok) {
-        alert("Greška prilikom kreiranja korisnika.");
-        return;
-    }
-
-    const user = await userResponse.json();
-
-    // Kreiraj donaciju
     const data = {
         amount: amount,
-        user_id: user.id,
+        user_id: userId,
         category_id: categoryId,
         organization: organization,
         payment_method_id: paymentMethodId
@@ -80,44 +59,28 @@ async function createDonation() {
 }
 
 async function editDonation(donationObjString) {
+ 
     const donation = JSON.parse(donationObjString);
 
+  
     const newAmount = prompt("Novi iznos (trenutno: " + donation.amount + "):", donation.amount);
     if (newAmount === null) return;
 
-    const newUserName = prompt("Novi korisnik (trenutno: " + donation.user_id + "):");
-    if (newUserName === null) return;
+    const newUserId = prompt("Novi user_id (trenutno: " + donation.user_id + "):", donation.user_id);
+    if (newUserId === null) return;
 
-    const newCategoryId = prompt("Nova kategorija (trenutno: " + donation.category_id + "):", donation.category_id);
+    const newCategoryId = prompt("Nova category_id (trenutno: " + donation.category_id + "):", donation.category_id);
     if (newCategoryId === null) return;
 
-    const newPaymentMethodId = prompt("Nova metoda plaćanja (trenutno: " + donation.payment_method_id + "):", donation.payment_method_id);
+    const newPaymentMethodId = prompt("Nova payment_method_id (trenutno: " + donation.payment_method_id + "):", donation.payment_method_id);
     if (newPaymentMethodId === null) return;
 
     const newOrganization = prompt("Nova organizacija (trenutno: " + (donation.organization || '') + "):", donation.organization);
     if (newOrganization === null) return;
 
-    // Kreiraj korisnika za ažuriranje ako je potrebno
-    let userId = donation.user_id;
-    if (newUserName !== donation.user_id) {
-        const userResponse = await fetch('/api/korisnici', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newUserName })
-        });
-
-        if (userResponse.ok) {
-            const user = await userResponse.json();
-            userId = user.id;
-        } else {
-            alert("Greška prilikom kreiranja novog korisnika.");
-            return;
-        }
-    }
-
     const data = {
         amount: parseFloat(newAmount),
-        user_id: userId,
+        user_id: parseInt(newUserId),
         category_id: parseInt(newCategoryId),
         payment_method_id: parseInt(newPaymentMethodId),
         organization: newOrganization
