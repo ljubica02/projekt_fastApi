@@ -24,7 +24,7 @@ async function loadDonations() {
 
 async function createDonation() {
     const amount = parseFloat(document.getElementById("amount").value);
-    const userName = document.getElementById("user_name").value.trim(); // Korisničko ime
+    const userName = document.getElementById("user_name").value.trim();
     const categoryId = parseInt(document.getElementById("category_id").value);
     const paymentMethodId = parseInt(document.getElementById("payment_method_id").value);
     const organization = document.getElementById("organization").value || null;
@@ -59,7 +59,7 @@ async function createDonation() {
     // Kreiraj donaciju
     const data = {
         amount: amount,
-        user_id: user.id, // Koristi ID novog korisnika
+        user_id: user.id,
         category_id: categoryId,
         organization: organization,
         payment_method_id: paymentMethodId
@@ -108,7 +108,7 @@ async function editDonation(donationObjString) {
 
         if (userResponse.ok) {
             const user = await userResponse.json();
-            userId = user.id; // Koristi ID novog korisnika
+            userId = user.id;
         } else {
             alert("Greška prilikom kreiranja novog korisnika.");
             return;

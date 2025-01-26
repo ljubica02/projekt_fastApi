@@ -93,7 +93,7 @@ class PaymentMethodSchema(BaseModel):
 
 class DonationSchema(BaseModel):
     amount: condecimal(gt=0, max_digits=10, decimal_places=2)
-    user_id: int
+    user_name: str  # Promijenjeno s user_id na user_name
     category_id: int
     organization: str | None = None
     payment_method_id: int
@@ -163,9 +163,17 @@ def read_payment_methods(db=Depends(get_db)):
 # Rute za donacije
 @app.post("/api/donacije", response_model=dict)
 def create_donation(donation: DonationSchema, db=Depends(get_db)):
+    # Provjeri postoji li korisnik, ako ne postoji, kreiraj ga
+    user = db.query(User).filter(User.name == donation.user_name).first()
+    if not user:
+        user = User(name=donation.user_name)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     db_donation = Donation(
         amount=donation.amount,
-        user_id=donation.user_id,
+        user_id=user.id,
         category_id=donation.category_id,
         organization=donation.organization,
         payment_method_id=donation.payment_method_id
@@ -199,7 +207,7 @@ def read_donations(db=Depends(get_db)):
         result.append({
             "id": d.id,
             "amount": float(d.amount),
-            "user_id": d.user_id,
+            "user_name": d.user.name,  # Prikazujemo ime korisnika
             "category_id": d.category_id,
             "organization": d.organization,
             "payment_method_id": d.payment_method_id,
@@ -215,9 +223,17 @@ def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_d
     if not db_donation:
         raise HTTPException(status_code=404, detail="Donation not found")
 
+    # Provjeri postoji li korisnik, ako ne postoji, kreiraj ga
+    user = db.query(User).filter(User.name == donation.user_name).first()
+    if not user:
+        user = User(name=donation.user_name)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     # Ažuriraj polja
     db_donation.amount = donation.amount
-    db_donation.user_id = donation.user_id
+    db_donation.user_id = user.id
     db_donation.category_id = donation.category_id
     db_donation.organization = donation.organization
     db_donation.payment_method_id = donation.payment_method_id
