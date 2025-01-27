@@ -14,9 +14,10 @@
 
         <label for="user_id">Korisnik:</label>
         <select id="user_id">
-            <option value="1">Marko</option>
-            <option value="2">Ana</option>
+            <!-- Popunjeno dinamički putem JavaScript-a -->
         </select>
+        <input type="text" id="new_user" placeholder="Dodaj novog korisnika (opcionalno)">
+        <button onclick="addUser()">Dodaj korisnika</button>
 
         <label for="category_id">Kategorija:</label>
         <select id="category_id">
@@ -45,4 +46,3 @@
     <script src="/static/script.js" defer></script>
 </body>
 </html>
-

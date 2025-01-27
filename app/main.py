@@ -1,3 +1,4 @@
+# main.py
 from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -8,7 +9,8 @@ from sqlalchemy import create_engine, Column, Integer, Numeric, String, ForeignK
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from redis import Redis
 import os
-#povezivanje na bazu
+
+# povezivanje na bazu
 DB_HOST = os.environ.get("DB_HOST", "mysql")
 DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "my-secret-pw")
@@ -47,7 +49,6 @@ class Organization(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
 
-
 class PaymentMethod(Base):
     __tablename__ = "metode_placanja"
     id = Column(Integer, primary_key=True, index=True)
@@ -70,6 +71,9 @@ class Donation(Base):
 
     payment_method_id = Column(Integer, ForeignKey('metode_placanja.id'), nullable=False)
     payment_method = relationship("PaymentMethod", back_populates="donations")
+
+class UserSchema(BaseModel):
+    name: str
 
 class OrganizationSchema(BaseModel):
     name: str
@@ -95,31 +99,18 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/api/organizations", response_model=dict)
-def create_organization(org: OrganizationSchema, db=Depends(get_db)):
-    db_org = Organization(name=org.name)
-    db.add(db_org)
+@app.post("/api/users", response_model=dict)
+def create_user(user: UserSchema, db=Depends(get_db)):
+    db_user = User(name=user.name)
+    db.add(db_user)
     db.commit()
-    db.refresh(db_org)
-    return {"id": db_org.id, "name": db_org.name}
+    db.refresh(db_user)
+    return {"id": db_user.id, "name": db_user.name}
 
-@app.get("/api/organizations", response_model=list[dict])
-def read_organizations(db=Depends(get_db)):
-    organizations = db.query(Organization).all()
-    return [{"id": o.id, "name": o.name} for o in organizations]
-
-@app.post("/api/payment_methods", response_model=dict)
-def create_payment_method(pm: PaymentMethodSchema, db=Depends(get_db)):
-    new_pm = PaymentMethod(name=pm.name)
-    db.add(new_pm)
-    db.commit()
-    db.refresh(new_pm)
-    return {"id": new_pm.id, "name": new_pm.name}
-
-@app.get("/api/payment_methods", response_model=list[dict])
-def read_payment_methods(db=Depends(get_db)):
-    methods = db.query(PaymentMethod).all()
-    return [{"id": m.id, "name": m.name} for m in methods]
+@app.get("/api/users", response_model=list[dict])
+def read_users(db=Depends(get_db)):
+    users = db.query(User).all()
+    return [{"id": u.id, "name": u.name} for u in users]
 
 @app.post("/api/donacije", response_model=dict)
 def create_donation(donation: DonationSchema, db=Depends(get_db)):
@@ -134,10 +125,7 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
     db.commit()
     db.refresh(db_donation)
 
-    # ocisti cache
     redis_client.delete("donations_list")
-    redis_client.delete("total_donations")
-
     return {
         "id": db_donation.id,
         "amount": float(db_donation.amount),
@@ -148,10 +136,6 @@ def create_donation(donation: DonationSchema, db=Depends(get_db)):
 
 @app.get("/api/donacije", response_model=list[dict])
 def read_donations(db=Depends(get_db)):
-    cached_donations = redis_client.get("donations_list")
-    if cached_donations:
-        return eval(cached_donations)
-
     donations = db.query(Donation).all()
     result = []
     for d in donations:
@@ -167,18 +151,12 @@ def read_donations(db=Depends(get_db)):
     redis_client.set("donations_list", str(result), ex=60)
     return result
 
-
 @app.put("/api/donacije/{donation_id}", response_model=dict)
 def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_db)):
-    """
-    U ovom primjeru radimo full update => klijent mora poslati sve atribute (DonationSchema).
-    Ako želite partial update, napravite poseban schema ili sve polja optional.
-    """
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
     if not db_donation:
         raise HTTPException(status_code=404, detail="Donation not found")
 
-    # Ažuriraj polja
     db_donation.amount = donation.amount
     db_donation.user_id = donation.user_id
     db_donation.category_id = donation.category_id
@@ -187,10 +165,7 @@ def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_d
 
     db.commit()
     db.refresh(db_donation)
-
-    # obriši keš
     redis_client.delete("donations_list")
-    redis_client.delete("total_donations")
 
     return {
         "id": db_donation.id,
@@ -208,13 +183,12 @@ def delete_donation(donation_id: int, db=Depends(get_db)):
 
     db.delete(db_donation)
     db.commit()
-
-    # obriši keš
     redis_client.delete("donations_list")
-    redis_client.delete("total_donations")
 
     return {"message": "Donation deleted successfully", "id": donation_id}
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+

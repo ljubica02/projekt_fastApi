@@ -21,12 +21,15 @@ h2 {
     padding: 15px;
     border-radius: 5px;
     margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 input,
 select {
     padding: 8px;
     margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 button {
@@ -52,11 +55,6 @@ ul {
 li {
     padding: 8px 0;
     border-bottom: 1px solid #ccc;
-}
-
-button.edit, button.delete {
-    margin-left: 10px;
-    padding: 4px 8px;
 }
 
 button.edit {
