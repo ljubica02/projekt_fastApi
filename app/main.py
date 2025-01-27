@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, Column, Integer, Numeric, String, ForeignK
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from redis import Redis
 import os
-#povezivanje na bazu
+
 DB_HOST = os.environ.get("DB_HOST", "mysql")
 DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "my-secret-pw")
@@ -20,7 +20,7 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# redis
+
 REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
 redis_client = Redis(host=REDIS_HOST, port=6379, decode_responses=True)
 
@@ -170,10 +170,7 @@ def read_donations(db=Depends(get_db)):
 
 @app.put("/api/donacije/{donation_id}", response_model=dict)
 def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_db)):
-    """
-    U ovom primjeru radimo full update => klijent mora poslati sve atribute (DonationSchema).
-    Ako želite partial update, napravite poseban schema ili sve polja optional.
-    """
+   
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
     if not db_donation:
         raise HTTPException(status_code=404, detail="Donation not found")
@@ -209,7 +206,7 @@ def delete_donation(donation_id: int, db=Depends(get_db)):
     db.delete(db_donation)
     db.commit()
 
-    # obriši keš
+    
     redis_client.delete("donations_list")
     redis_client.delete("total_donations")
 
