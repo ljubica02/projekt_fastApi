@@ -1,5 +1,3 @@
-// script.js
-
 async function loadDonations() {
     const response = await fetch('/api/donacije');
     const donations = await response.json();
@@ -9,115 +7,97 @@ async function loadDonations() {
     donations.forEach(donation => {
         const li = document.createElement('li');
         li.innerHTML =
-            `ID: ${donation.id}, ` +
-            `Iznos: ${donation.amount} KM, ` +
-            `Korisnik: ${donation.user_id}, ` +
-            `Kategorija: ${donation.category_id}, ` +
-            `Metoda plaćanja: ${donation.payment_method_id}, ` +
-            `Organizacija: ${donation.organization || ''}, ` +
-            `Vrijeme: ${donation.time || ''} ` +
-            `<button class="edit" onclick="editDonation(${donation.id})">Uredi</button>` +
-            `<button class="delete" onclick="deleteDonation(${donation.id})">Obriši</button>`;
+            `ID: ${donation.id}, `
+            + `Iznos: ${donation.amount} KM, `
+            + `Korisnik: ${donation.user_id}, `
+            + `Kategorija: ${donation.category_id}, `
+            + `Metoda plaćanja: ${donation.payment_method_id}, `
+            + `Organizacija: ${donation.organization || ''}, `
+            + `Vrijeme: ${donation.time || ''} `
+            + `<button class="delete" onclick="deleteDonation(${donation.id})">Delete</button>`;
 
         donationsList.appendChild(li);
     });
 }
 
 async function createDonation() {
-    const amount = parseFloat(document.getElementById('amount').value);
-    const userName = document.getElementById('user_name').value.trim();
-    const categoryId = parseInt(document.getElementById('category_id').value);
-    const paymentMethodId = parseInt(document.getElementById('payment_method_id').value);
-    const organization = document.getElementById('organization').value || null;
+    const amount = parseFloat(document.getElementById("amount").value);
+    const userId = parseInt(document.getElementById("user_id").value);
+    const categoryId = parseInt(document.getElementById("category_id").value);
+    const paymentMethodId = parseInt(document.getElementById("payment_method_id").value);
+    const organization = document.getElementById("organization").value || null;
 
     if (isNaN(amount) || amount <= 0) {
-        alert('Molimo unesite ispravan iznos donacije (veći od 0).');
+        alert("Molimo unesite ispravan iznos donacije (veći od 0).");
         return;
     }
-
-    if (!userName) {
-        alert('Molimo unesite ime korisnika.');
+    if (!userId || !categoryId || !paymentMethodId) {
+        alert("Nedostaje korisnik, kategorija ili metoda plaćanja.");
         return;
     }
-
-    const userResponse = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: userName })
-    });
-
-    if (!userResponse.ok) {
-        alert('Greška prilikom dodavanja korisnika.');
-        return;
-    }
-
-    const userData = await userResponse.json();
 
     const data = {
         amount: amount,
-        user_id: userData.id,
+        user_id: userId,
         category_id: categoryId,
         organization: organization,
         payment_method_id: paymentMethodId
     };
 
-    const donationResponse = await fetch('/api/donacije', {
+    const response = await fetch('/api/donacije', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
 
-    if (donationResponse.ok) {
-        alert('Donacija uspješno dodana!');
+    if (response.ok) {
+        alert("Donacija uspješno dodana!");
         loadDonations();
     } else {
-        alert('Greška prilikom dodavanja donacije.');
+        alert("Greška prilikom dodavanja donacije.");
     }
 }
 
-async function editDonation(donationId) {
-    const newAmount = prompt('Unesite novi iznos:');
-    if (!newAmount) return;
+async function editDonation(donationObjString) {
+ 
+    const donation = JSON.parse(donationObjString);
 
-    const newUserName = prompt('Unesite novo ime korisnika:');
-    if (!newUserName) return;
+  
+    const newAmount = prompt("Novi iznos (trenutno: " + donation.amount + "):", donation.amount);
+    if (newAmount === null) return;
 
-    const categoryId = prompt('Unesite novu kategoriju (ID):');
-    const paymentMethodId = prompt('Unesite novu metodu plaćanja (ID):');
-    const organization = prompt('Unesite novu organizaciju (opcionalno):');
+    const newUserId = prompt("Novi user_id (trenutno: " + donation.user_id + "):", donation.user_id);
+    if (newUserId === null) return;
 
-    const userResponse = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newUserName })
-    });
+    const newCategoryId = prompt("Nova category_id (trenutno: " + donation.category_id + "):", donation.category_id);
+    if (newCategoryId === null) return;
 
-    if (!userResponse.ok) {
-        alert('Greška prilikom ažuriranja korisnika.');
-        return;
-    }
+    const newPaymentMethodId = prompt("Nova payment_method_id (trenutno: " + donation.payment_method_id + "):", donation.payment_method_id);
+    if (newPaymentMethodId === null) return;
 
-    const userData = await userResponse.json();
+    const newOrganization = prompt("Nova organizacija (trenutno: " + (donation.organization || '') + "):", donation.organization);
+    if (newOrganization === null) return;
 
     const data = {
         amount: parseFloat(newAmount),
-        user_id: userData.id,
-        category_id: parseInt(categoryId),
-        payment_method_id: parseInt(paymentMethodId),
-        organization: organization || null
+        user_id: parseInt(newUserId),
+        category_id: parseInt(newCategoryId),
+        payment_method_id: parseInt(newPaymentMethodId),
+        organization: newOrganization
     };
 
-    const response = await fetch(`/api/donacije/${donationId}`, {
+    const response = await fetch(`/api/donacije/${donation.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
 
     if (response.ok) {
-        alert('Donacija uspješno ažurirana!');
+        alert("Donacija uspješno ažurirana!");
         loadDonations();
     } else {
-        alert('Greška prilikom ažuriranja donacije.');
+        const errorData = await response.json();
+        alert("Greška prilikom ažuriranja donacije: " + JSON.stringify(errorData));
     }
 }
 
@@ -131,13 +111,13 @@ async function deleteDonation(donationId) {
     });
 
     if (response.ok) {
-        alert('Donacija obrisana!');
+        alert("Donacija obrisana!");
         loadDonations();
     } else {
-        alert('Greška prilikom brisanja donacije.');
+        alert("Greška prilikom brisanja donacije.");
     }
 }
 
-window.onload = function () {
+window.onload = function() {
     loadDonations();
 };

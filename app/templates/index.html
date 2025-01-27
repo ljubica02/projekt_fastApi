@@ -12,8 +12,11 @@
         <h2>Dodaj donaciju</h2>
         <input type="number" id="amount" placeholder="Iznos donacije (npr. 100.00)" step="0.01" min="0.01">
 
-        <label for="user_name">Korisnik:</label>
-        <input type="text" id="user_name" placeholder="Ime korisnika">
+        <label for="user_id">Korisnik:</label>
+        <select id="user_id">
+            <option value="1">Marko</option>
+            <option value="2">Ana</option>
+        </select>
 
         <label for="category_id">Kategorija:</label>
         <select id="category_id">
@@ -42,3 +45,4 @@
     <script src="/static/script.js" defer></script>
 </body>
 </html>
+
