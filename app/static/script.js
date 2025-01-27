@@ -1,40 +1,4 @@
-async function loadUsers() {
-    const response = await fetch('/api/users');
-    const users = await response.json();
-    const userSelect = document.getElementById('user_id');
-    userSelect.innerHTML = '';
-
-    users.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user.id;
-        option.textContent = user.name;
-        userSelect.appendChild(option);
-    });
-}
-
-async function addUser() {
-    const newUserInput = document.getElementById('new_user');
-    const newUserName = newUserInput.value.trim();
-
-    if (!newUserName) {
-        alert('Unesite ime korisnika.');
-        return;
-    }
-
-    const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newUserName })
-    });
-
-    if (response.ok) {
-        alert('Korisnik uspješno dodan!');
-        newUserInput.value = '';
-        loadUsers();
-    } else {
-        alert('Greška prilikom dodavanja korisnika.');
-    }
-}
+// script.js
 
 async function loadDonations() {
     const response = await fetch('/api/donacije');
@@ -61,7 +25,7 @@ async function loadDonations() {
 
 async function createDonation() {
     const amount = parseFloat(document.getElementById('amount').value);
-    const userId = parseInt(document.getElementById('user_id').value);
+    const userName = document.getElementById('user_name').value.trim();
     const categoryId = parseInt(document.getElementById('category_id').value);
     const paymentMethodId = parseInt(document.getElementById('payment_method_id').value);
     const organization = document.getElementById('organization').value || null;
@@ -71,21 +35,39 @@ async function createDonation() {
         return;
     }
 
+    if (!userName) {
+        alert('Molimo unesite ime korisnika.');
+        return;
+    }
+
+    const userResponse = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: userName })
+    });
+
+    if (!userResponse.ok) {
+        alert('Greška prilikom dodavanja korisnika.');
+        return;
+    }
+
+    const userData = await userResponse.json();
+
     const data = {
         amount: amount,
-        user_id: userId,
+        user_id: userData.id,
         category_id: categoryId,
         organization: organization,
         payment_method_id: paymentMethodId
     };
 
-    const response = await fetch('/api/donacije', {
+    const donationResponse = await fetch('/api/donacije', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
 
-    if (response.ok) {
+    if (donationResponse.ok) {
         alert('Donacija uspješno dodana!');
         loadDonations();
     } else {
@@ -97,7 +79,33 @@ async function editDonation(donationId) {
     const newAmount = prompt('Unesite novi iznos:');
     if (!newAmount) return;
 
-    const data = { amount: parseFloat(newAmount) };
+    const newUserName = prompt('Unesite novo ime korisnika:');
+    if (!newUserName) return;
+
+    const categoryId = prompt('Unesite novu kategoriju (ID):');
+    const paymentMethodId = prompt('Unesite novu metodu plaćanja (ID):');
+    const organization = prompt('Unesite novu organizaciju (opcionalno):');
+
+    const userResponse = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newUserName })
+    });
+
+    if (!userResponse.ok) {
+        alert('Greška prilikom ažuriranja korisnika.');
+        return;
+    }
+
+    const userData = await userResponse.json();
+
+    const data = {
+        amount: parseFloat(newAmount),
+        user_id: userData.id,
+        category_id: parseInt(categoryId),
+        payment_method_id: parseInt(paymentMethodId),
+        organization: organization || null
+    };
 
     const response = await fetch(`/api/donacije/${donationId}`, {
         method: 'PUT',
@@ -131,6 +139,5 @@ async function deleteDonation(donationId) {
 }
 
 window.onload = function () {
-    loadUsers();
     loadDonations();
 };

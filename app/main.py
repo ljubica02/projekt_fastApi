@@ -1,4 +1,3 @@
-# main.py
 from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -101,6 +100,10 @@ def get_db():
 
 @app.post("/api/users", response_model=dict)
 def create_user(user: UserSchema, db=Depends(get_db)):
+    existing_user = db.query(User).filter(User.name == user.name).first()
+    if existing_user:
+        return {"id": existing_user.id, "name": existing_user.name}
+
     db_user = User(name=user.name)
     db.add(db_user)
     db.commit()
@@ -114,6 +117,18 @@ def read_users(db=Depends(get_db)):
 
 @app.post("/api/donacije", response_model=dict)
 def create_donation(donation: DonationSchema, db=Depends(get_db)):
+    user = db.query(User).filter(User.id == donation.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Korisnik ne postoji")
+
+    category = db.query(Category).filter(Category.id == donation.category_id).first()
+    if not category:
+        raise HTTPException(status_code=400, detail="Kategorija ne postoji")
+
+    payment_method = db.query(PaymentMethod).filter(PaymentMethod.id == donation.payment_method_id).first()
+    if not payment_method:
+        raise HTTPException(status_code=400, detail="Metoda plaćanja ne postoji")
+
     db_donation = Donation(
         amount=donation.amount,
         user_id=donation.user_id,
@@ -155,7 +170,19 @@ def read_donations(db=Depends(get_db)):
 def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_db)):
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
     if not db_donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+        raise HTTPException(status_code=404, detail="Donacija nije pronađena")
+
+    user = db.query(User).filter(User.id == donation.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Korisnik ne postoji")
+
+    category = db.query(Category).filter(Category.id == donation.category_id).first()
+    if not category:
+        raise HTTPException(status_code=400, detail="Kategorija ne postoji")
+
+    payment_method = db.query(PaymentMethod).filter(PaymentMethod.id == donation.payment_method_id).first()
+    if not payment_method:
+        raise HTTPException(status_code=400, detail="Metoda plaćanja ne postoji")
 
     db_donation.amount = donation.amount
     db_donation.user_id = donation.user_id
@@ -165,6 +192,7 @@ def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_d
 
     db.commit()
     db.refresh(db_donation)
+
     redis_client.delete("donations_list")
 
     return {
@@ -179,13 +207,12 @@ def update_donation(donation_id: int, donation: DonationSchema, db=Depends(get_d
 def delete_donation(donation_id: int, db=Depends(get_db)):
     db_donation = db.query(Donation).filter(Donation.id == donation_id).first()
     if not db_donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
-
-    db.delete(db_donation)
+        raise HTTPException(status_code=404, detail="Donacija nije pronađena")
+            db.delete(db_donation)
     db.commit()
     redis_client.delete("donations_list")
 
-    return {"message": "Donation deleted successfully", "id": donation_id}
+    return {"message": "Donacija uspješno obrisana", "id": donation_id}
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):

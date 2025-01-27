@@ -30,6 +30,9 @@ select {
     margin: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    display: inline-block;
+    width: calc(100% - 20px);
+    max-width: 300px;
 }
 
 button {
@@ -41,6 +44,7 @@ button {
     background-color: #007ACC;
     color: #fff;
     font-weight: 500;
+    transition: background-color 0.3s;
 }
 
 button:hover {
@@ -71,4 +75,23 @@ button.delete {
 
 button.delete:hover {
     background-color: #c9302c;
+}
+
+/* Razdvajanje elemenata u formi */
+.add-donation div {
+    margin-top: 10px;
+}
+
+/* Stil za poruke grešaka */
+.error-message {
+    color: #d9534f;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+}
+
+/* Stil za unos korisnika */
+input#user_name {
+    width: 100%;
+    max-width: 300px;
 }
